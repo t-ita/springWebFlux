@@ -69,6 +69,7 @@ git push -u origin master
 ## 3. mono / flux を返す RestController を作ってみる
 ```java
 @RestController
+@RequestMapping("publish")
 public class WebFluxPublisherController {
 
   @GetMapping("greeting")
@@ -77,7 +78,7 @@ public class WebFluxPublisherController {
   }
 
   @GetMapping("numberstream")
-  Flux<Long> numbers() {
+  Flux<Long> numberStream() {
     return Flux.interval(Duration.ofMillis(500)); // 0.5秒毎に数値を0からカウントアップして返す
   }
 
@@ -90,12 +91,12 @@ public class WebFluxPublisherController {
 #### curl で API を叩いてみる
 - mono
 ```shell
-$ curl http://localhost:8080/greeting
+$ curl http://localhost:8080/publish/greeting
 Hello, WebFlux!
 ```
-- flux (Stream で受け取るには、`test/event-stream` で受け取る必要がある)
+- flux (Stream で受け取るには、ヘッダに `Accept: test/event-stream` を指定する必要がある)
 ```shell
-$ curl -H "Accept: text/event-stream" http://localhost:8080/numberstream  
+$ curl -H "Accept: text/event-stream" http://localhost:8080/publish/numberstream  
 data:0
 
 data:1
