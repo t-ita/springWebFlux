@@ -9,16 +9,16 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 @RestController
-public class WebFluxAnnotationController {
+public class WebFluxPublisherController {
 
-    @GetMapping("mono")
-    Mono<String> mono() {
+    @GetMapping("greeting")
+    Mono<String> greeting() {
         return Mono.just("Hello, WebFlux!");
     }
 
-    @GetMapping("flux")
-    Flux<String> flux() {
-        return Flux.interval(Duration.ofSeconds(1)).map(aLong -> LocalDateTime.now().toString());
+    @GetMapping("numberstream")
+    Flux<Long> numberStream() {
+        return Flux.interval(Duration.ofMillis(500)); // 0.5秒毎に数値を0からカウントアップして返す
     }
 
 }
