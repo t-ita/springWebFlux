@@ -69,17 +69,17 @@ git push -u origin master
 ## 3. mono / flux を返す RestController を作ってみる
 ```java
 @RestController
-public class WebFluxAnnotationController {
+public class WebFluxPublisherController {
 
-    @GetMapping("mono")
-    Mono<String> mono() {
-        return Mono.just("Hello, WebFlux!");
-    }
+  @GetMapping("greeting")
+  Mono<String> greeting() {
+    return Mono.just("Hello, WebFlux!");
+  }
 
-    @GetMapping("flux")
-    Flux<String> flux() {
-        return Flux.interval(Duration.ofSeconds(1)).map(aLong -> LocalDateTime.now().toString());
-    }
+  @GetMapping("numberstream")
+  Flux<Long> numbers() {
+    return Flux.interval(Duration.ofMillis(500)); // 0.5秒毎に数値を0からカウントアップして返す
+  }
 
 }
 ```
@@ -90,25 +90,23 @@ public class WebFluxAnnotationController {
 #### curl で API を叩いてみる
 - mono
 ```shell
-$ curl http://localhost:8080/mono
+$ curl http://localhost:8080/greeting
 Hello, WebFlux!
 ```
 - flux (Stream で受け取るには、`test/event-stream` で受け取る必要がある)
 ```shell
-$ curl -H "Accept: text/event-stream" http://localhost:8080/flux  
-data:2022-05-11T18:45:37.264472
+$ curl -H "Accept: text/event-stream" http://localhost:8080/numberstream  
+data:0
 
-data:2022-05-11T18:45:38.264507
+data:1
 
-data:2022-05-11T18:45:39.265814
+data:2
 
-data:2022-05-11T18:45:40.264431
+data:3
 
-data:2022-05-11T18:45:41.264413
+data:4
 
-data:2022-05-11T18:45:42.264400
-
-^C
+^C          
 ```
 
 ## 参考サイト
