@@ -1,5 +1,5 @@
 # Spring WebFlux 手習い
-## 1. 環境構築
+## 環境構築
 ### Spring Initializr
 下記設定で、Spring プロジェクトを作成
 - Project
@@ -55,18 +55,18 @@ tasks.named('test') {
 ```
 ### jEnv
 Java 環境を Jenv で指定
-```commandline
+```
 jenv local 17.0.3
 ```
-## 2. プロジェクトの初期状態を Github に登録
-```commandline
+### プロジェクトの初期状態を Github に登録
+```
 git init
 git commit -m "first commit"
 git remote add origin git@github.com:xxx.git
 git push -u origin master
 ```
 
-## 3. mono / flux を返す RestController を作ってみる
+## mono / flux を返す RestController を作ってみる
 ```java
 @RestController
 @RequestMapping("publish")
@@ -90,12 +90,12 @@ public class WebFluxPublisherController {
 
 #### curl で API を叩いてみる
 - mono
-```shell
+```
 $ curl http://localhost:8080/publish/greeting
 Hello, WebFlux!
 ```
 - flux (Stream で受け取るには、ヘッダに `Accept: test/event-stream` を指定する必要がある)
-```shell
+```
 $ curl -H "Accept: text/event-stream" http://localhost:8080/publish/numberstream  
 data:0
 
@@ -110,6 +110,84 @@ data:4
 ^C          
 ```
 
+## WebFlux で Reactive な WebAPI を処理するクライアントを作る
+```java
+@RestController
+@RequestMapping("subscribe")
+public class WebFluxSubscriberController {
+
+    private final WebClient client;
+
+    public WebFluxSubscriberController(WebClient.Builder builder) {
+        this.client = builder.baseUrl("http://localhost:8080").build();
+    }
+
+    @GetMapping("greeting")
+    public Mono<String> subscribeGreeting() {
+        return client.get().uri("publish/greeting").accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(s -> "Subscribe: " + s);
+    }
+
+    @GetMapping("fizzbuzz")
+    public Flux<String> fizzBuzz() {
+        return client.get().uri("publish/numberstream").accept(MediaType.APPLICATION_NDJSON)
+                .retrieve()
+                .bodyToFlux(Long.class)
+                .map(aLong -> (aLong%3==0?"Fizz":"")+(aLong%5==0?"Buzz":aLong%3==0?"":aLong));
+    }
+}
+```
+#### curl で API を叩いてみる
+```
+$ curl http://localhost:8080/subscribe/greeting
+Subscribe: Hello, WebFlux! 
+```
+```
+$curl -H "accept: text/event-stream" http://localhost:8080/subscribe/fizzbuzz
+data:FizzBuzz
+
+data:1
+
+data:2
+
+data:Fizz
+
+data:4
+
+data:Buzz
+
+data:Fizz
+
+data:7
+
+data:8
+
+data:Fizz
+
+data:Buzz
+
+data:11
+
+data:Fizz
+
+data:13
+
+data:14
+
+data:FizzBuzz
+
+data:16
+
+data:17
+
+data:Fizz
+
+data:19
+```
+
 ## 参考サイト
-[今こそ知りたいSpring Web（Spring Fest 2020講演資料）](https://www.slideshare.net/nttdata-tech/spring-fest-2020-spring-web-nttdata)
-[マイクロサービス時代に活きるフレームワーク Spring WebFlux入門](https://news.mynavi.jp/techplus/series/_spring_webflux/)
+[今こそ知りたいSpring Web（Spring Fest 2020講演資料）](https://www.slideshare.net/nttdata-tech/spring-fest-2020-spring-web-nttdata)</br>
+[マイクロサービス時代に活きるフレームワーク Spring WebFlux入門](https://news.mynavi.jp/techplus/series/_spring_webflux/)</br>
+[Building a Reactive RESTful Web Service](https://spring.io/guides/gs/reactive-rest-service/)</br>
